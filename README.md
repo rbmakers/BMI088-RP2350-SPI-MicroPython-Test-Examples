@@ -1,0 +1,62 @@
+BMI088 慣性感測器 SPI MicroPython 驅動手冊
+=================================
+
+1\. 簡介
+------
+
+本倉庫包含專為 **XIAO RP2350** 飛行控制板優化的 BMI088 驅動程序。BMI088 是一款工業級、高抗震的 6 軸 IMU（加速度計 + 陀螺儀）。本版本採用 **SPI 協議** 通訊，相比 I2C 模式，SPI 具有更高的數據吞吐量與電磁兼容性，能有效避免飛行器電機干擾導致的總線掛死問題。
+
+2\. 硬體連接 (引脚映射)
+---------------
+
+根據您的電路設計與代碼定義，請確保硬體連接如下：
+
+**BMI088 引腳XIAO RP2350 引腳功能描述SCK**GPIO 2 (D8)SPI 時鐘信號**SDI (MOSI)**GPIO 3 (D10)主機輸出 / 從機輸入**SDO (MISO)**GPIO 4 (D9)主機輸入 / 從機輸出**CSB1**GPIO 5 (D3)加速度計片選 (低電位致能)**CSB2**GPIO 6 (D4)陀螺儀片選 (低電位致能)**PS**GND**關鍵：** 必須接地以啟用 SPI 模式
+
+3\. 核心技術特性
+----------
+
+*   **硬體強啟動 (Hard Wakeup)**：針對 BMI088 陀螺儀在冷啟動時可能無法即時切換 SPI 模式的問題，加入了特定的片選信號握手邏輯。
+    
+*   **加速度計偽位元組處理 (Dummy Byte)**：自動跳過 BMI088 加速度計在 SPI 協議下的第一個無效數據位元組。
+    
+*   **靜態自動校準 (Static Calibration)**：
+    
+    *   **陀螺儀**：自動計算並扣除零偏（Zero-drift）。
+        
+    *   **加速度計**：支持重力感測校準。校準後，水平放置時 Z 軸讀數為 $1.0g$，X/Y 軸為 $0.0g$。
+        
+*   **防凍結監控 (Anti-Freeze)**：實時偵測數據異常（如連續讀取到固定偏置值 $-0.061$），一旦觸發異常即自動執行傳感器熱重啟。
+    
+
+4\. 快速上手教學
+----------
+
+### 步驟一：上傳驅動文件
+
+使用 Thonny 或其他工具將 bmi088\_spi.py 上傳至 XIAO RP2350 的根目錄。
+
+### 步驟二：執行範例代碼
+
+在 main.py 中引用驅動並初始化：
+
+Python
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   from bmi088_spi import BMI088_SPI  from machine import SPI, Pin  # 初始化 SPI0 總線 (建議測試頻率 1MHz)  spi = SPI(0, baudrate=1000000, sck=Pin(2), mosi=Pin(3), miso=Pin(4))  # 建立實例  imu = BMI088_SPI(spi, cs_acc=5, cs_gyro=6)  # 初始化並執行 100 次樣本校準  if imu.begin():      imu.calibrate(samples=100)      print("BMI088 已準備就緒")   `
+
+5\. 數據單位
+--------
+
+*   **加速度 (Accelerometer)**: 單位為 **g** ($1g \\approx 9.80665 m/s^2$)。
+    
+*   **角速度 (Gyroscope)**: 單位為 **dps** (Degrees Per Second，度/秒)。
+    
+
+6\. 開發建議
+--------
+
+1.  **校準環境**：執行 calibrate() 時，請務必將飛行器平放並保持絕對靜止。
+    
+2.  **提升採樣率**：在硬體測試穩定後，可將 baudrate 提升至 $5MHz$ ($5000000$) 以獲得更低的控制延遲。
+    
+3.  **濾波處理**：IMU 原始數據通常含有噪聲，建議在獲取數據後接續使用低通濾波器 (LPF) 或互補濾波器。
