@@ -1,3 +1,4 @@
+
 BMI088 慣性感測器 SPI MicroPython 驅動手冊
 =================================
 
@@ -40,9 +41,23 @@ BMI088 慣性感測器 SPI MicroPython 驅動手冊
 
 在 main.py 中引用驅動並初始化：
 
-Python
+```python
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   from bmi088_spi import BMI088_SPI  from machine import SPI, Pin  # 初始化 SPI0 總線 (建議測試頻率 1MHz)  spi = SPI(0, baudrate=1000000, sck=Pin(2), mosi=Pin(3), miso=Pin(4))  # 建立實例  imu = BMI088_SPI(spi, cs_acc=5, cs_gyro=6)  # 初始化並執行 100 次樣本校準  if imu.begin():      imu.calibrate(samples=100)      print("BMI088 已準備就緒")   `
+from bmi088_spi import BMI088_SPI
+from machine import SPI, Pin
+
+# 初始化 SPI0 總線 (建議測試頻率 1MHz)
+spi = SPI(0, baudrate=1000000, sck=Pin(2), mosi=Pin(3), miso=Pin(4))
+
+# 建立實例
+imu = BMI088_SPI(spi, cs_acc=5, cs_gyro=6)
+
+# 初始化並執行 100 次樣本校準
+if imu.begin():
+    imu.calibrate(samples=100)
+    print("BMI088 已準備就緒")
+
+```
 
 5\. 數據單位
 --------
