@@ -1,3 +1,5 @@
+//   Bosch BMI088 範例程式 , 火箭鳥創客倉庫
+
 from machine import SPI, Pin
 import time
 
